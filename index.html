@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Keeping</title>
+</head>
+<body>
+  <form class="form">
+    <div class="date">
+      <label for="date">Date</label>
+      <input type="date" name="date" id="date">
+
+      <br>
+
+      <label for="name">Name</label>
+      <input type="text" name="name" id="name">
+
+      <br>
+
+      <select name="inout" id="inout">
+        <option value="in">In</option>
+        <option value="out">Out</option>
+      </select>
+
+      <br>
+
+      <label for="money">Amount</label>
+      <input type="number" name="money" id="money">
+
+      <br>
+    </div>
+
+    <button id="submit">Submit</button>
+  </form>
+
+  <div id="msg">
+    <pre></pre>
+  </div>
+
+  <div class="data">
+    <span id="rid"></span>&nbsp;<span id="rdate"></span>&nbsp;<span id="rtitle"></span>&nbsp;<span id="rinout"></span>&nbsp;<span id="ramount"></span>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlSw8GZ0aSF3OM6F_LN_FcvGd5Drvx01s",
+      authDomain: "samsbookkeeping-c9642.firebaseapp.com",
+      databaseURL: "https://samsbookkeeping-c9642.firebaseio.com",
+      projectId: "samsbookkeeping-c9642",
+      storageBucket: "samsbookkeeping-c9642.appspot.com",
+      messagingSenderId: "436745462760",
+      appId: "1:436745462760:web:baa687338b847d3141ba5d",
+      measurementId: "G-PSYQM1NF2H"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    var database = firebase.database();
+
+    var ref = firebase.database().ref("books");
+
+    ref.on("value", function(snapshot) {
+      console.clear()
+      snapshot.forEach(function(childSnapshot) {
+        var childData = childSnapshot.val();
+        var id = childData.id;
+        console.log(childData)
+      });
+    });
+
+    var currentdate = new Date();
+    document.getElementById("date").value = currentdate.getFullYear().toString() + '-' + (currentdate.getMonth() + 1).toString().padStart(2, 0) + '-' + currentdate.getDate().toString().padStart(2, 0);
+
+    let books = [];
+
+    const addBook = (ev)=> {
+      ev.preventDefault();
+      let book = {
+        id: Date.now(),
+        date: document.getElementById("date").value,
+        title: document.getElementById("name").value,
+        inout: document.getElementById("inout").value,
+        amount: document.getElementById("money").value
+      }
+      
+      writeUserData(book.id, book.date, book.title, book.inout, book.amount);
+      books.push(book);
+      document.forms[0].reset();
+
+    }
+
+    function writeUserData(id, date, title, inout, money) {
+      var postData = {
+        bid: id,
+        date: date,
+        title: title,
+        inout: inout,
+        money: money
+      };
+
+      // Get a key for a new Post.
+      var newPostKey = firebase.database().ref().child('books').push().key;
+
+      // Write the new post's data simultaneously in the posts list and the user's post list.
+      var updates = {};
+      updates['/books/' + newPostKey] = postData;
+
+      return firebase.database().ref().update(updates);
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('submit').addEventListener('click', addBook);
+    })
+    // document.getElementById("submit").onclick = function() {
+    //   var date = document.getElementById("date").value;
+    //   var title = document.getElementById("name").value;
+    //   var inout = document.getElementById("inout").value;
+    //   var amount = document.getElementById("money").value;
+
+    //   console.log(`${date} ${title} ${inout} ${amount}`)
+    // }
+  </script>
+</body>
+</html>
