@@ -1,45 +1,141 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Book Keeping</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: gainsboro;
+      font-size: 1.25em;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .new-entery {
+      background-color: slategrey;
+      color: #fff;
+      padding: 50px 20px;
+      text-align: center;
+      max-width: 50%;
+      margin: auto;
+      font-size: 1.5em;
+      margin-top: 25px;
+      border-radius: 15px;
+      border: 1px solid #fff;
+    }
+
+    select {
+      color: green;
+    }
+
+    .allData {
+      padding: 50px;
+      width: 100%;
+    }
+
+    .allData span {
+      /* margin: auto; */
+      /* text-align: center; */
+      position: absolute;
+      padding: 30px;
+      width: 100%;
+      font-size: 2em;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: auto;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+      padding: 15px;
+    }
+
+    .total {
+      text-align: center;
+      margin: auto;
+    }
+
+    input, select {
+      height: 2em;
+      font-size: 0.5em;
+    }
+
+    select {
+      margin-right: -10px;
+      border-bottom-left-radius: 5px;
+      border-top-left-radius: 5px;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+
+    select, #money {
+      border: 0;
+    }
+
+    #money {
+      border-bottom-right-radius: 5px;
+      border-top-right-radius: 5px;
+      padding-left: 5px;
+    }
+
+    #submit {
+      padding: 10px;
+      color: #fff;
+      background-color: darkgreen;
+      border: 1px solid #fff;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <form class="form">
-    <div class="date">
-      <label for="date">Date</label>
-      <input type="date" name="date" id="date">
+  <div class="new-entery">
+    <form class="form">
+      <div class="date">
+        <label for="date">Date</label>
+        <input type="date" name="date" id="date" required>
+  
+        <br>
+  
+        <label for="name">Title</label>
+        <input type="text" name="name" id="name" required>
+  
+        <br>
+  
+        <label for="money">Amount</label>
+        <select name="inout" id="inout">
+          <option value="in" style="color: green;">In</option>
+          <option value="out" style="color: red;">Out</option>
+        </select>
+        <input type="number" name="money" id="money" required>
+  
+        <br>
+      </div>
+  
+      <button id="submit">Submit</button>
 
-      <br>
-
-      <label for="name">Name</label>
-      <input type="text" name="name" id="name">
-
-      <br>
-
-      <select name="inout" id="inout">
-        <option value="in">In</option>
-        <option value="out">Out</option>
-      </select>
-
-      <br>
-
-      <label for="money">Amount</label>
-      <input type="number" name="money" id="money">
-
-      <br>
-    </div>
-
-    <button id="submit">Submit</button>
-  </form>
-
-  <div id="msg">
-    <pre></pre>
+    </form>
   </div>
-
-  <div class="data">
-    <span id="rid"></span>&nbsp;<span id="rdate"></span>&nbsp;<span id="rtitle"></span>&nbsp;<span id="rinout"></span>&nbsp;<span id="ramount"></span>
+  
+  <div class="allData">
+    <table id="data-table">
+      <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Title</th>
+        <th>In / Out</th>
+        <th>Amount</th>
+      </tr>
+    </table>
+    <span id="total" class="total"></span>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
@@ -64,17 +160,74 @@
 
     var ref = firebase.database().ref("books");
 
-    ref.on("value", function(snapshot) {
-      console.clear()
-      snapshot.forEach(function(childSnapshot) {
-        var childData = childSnapshot.val();
-        var id = childData.id;
-        console.log(childData)
-      });
-    });
+    var userDataref = firebase.database().ref("books").orderByKey();
+
+    var total = 0;
+
+    userDataref.once("value")
+      .then(function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var childData = childSnapshot.val();
+
+          var id_bid = childSnapshot.val().bid;
+          var id_date = childSnapshot.val().date;
+          var id_inout = childSnapshot.val().inout;
+          var id_money = childSnapshot.val().money;
+          var id_title = childSnapshot.val().title;
+          var rootel = document.getElementById('data-table').appendChild(document.createElement("tr"));
+          rootel.appendChild(document.createElement("td")).innerHTML = id_bid
+          rootel.appendChild(document.createElement("td")).innerHTML = id_date
+          rootel.appendChild(document.createElement("td")).innerHTML = id_title
+          var inoutcolor = rootel.appendChild(document.createElement("td"));
+          inoutcolor.innerHTML = id_inout;
+          var amount = rootel.appendChild(document.createElement("td"));
+          amount.innerHTML = `€ ${parseFloat(id_money)}`
+          if(id_inout == "in")
+          {
+            inoutcolor.style.color = "green"
+            amount.style.color = "green"
+            total += parseFloat(id_money)
+          } else {
+            inoutcolor.style.color = "red"
+            amount.style.color = "red"
+            amount.innerHTML = `€ ${parseFloat(id_money) * -1}`
+            total += (parseFloat(id_money) * -1)
+          }
+        })
+        document.getElementById("total").innerHTML = `Total: € ${total}`
+        document.getElementById("total").style.fontStyle = "bold"
+      })
+
+    // ref.on("value", function(snapshot) {
+    //   console.clear()
+    //   snapshot.forEach(function(childSnapshot) {
+    //     var childData = childSnapshot.val();
+    //     var id = childData.id;
+    //     console.log(childData)
+    //   });
+    // });
 
     var currentdate = new Date();
     document.getElementById("date").value = currentdate.getFullYear().toString() + '-' + (currentdate.getMonth() + 1).toString().padStart(2, 0) + '-' + currentdate.getDate().toString().padStart(2, 0);
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('inout').addEventListener('change', selectChange);
+    })
+
+    function selectChange() {
+      console.log("Changing");
+      let selectval = document.getElementById('inout').value;
+      if(selectval == "in")
+      {
+        document.getElementById('inout').style.color = "green";
+        document.getElementById('money').style.color = "green";
+      } else {
+        document.getElementById('inout').style.color = "red";
+        document.getElementById('money').style.color = "red";
+        document.getElementById('money').value *= -1;
+      }
+    }
 
     let books = [];
 
@@ -87,11 +240,25 @@
         inout: document.getElementById("inout").value,
         amount: document.getElementById("money").value
       }
+
+      if(book.date == "")
+      {
+        alert("Please fill in the date value")
+        return;
+      } else if(book.title == "")
+      {
+        alert("Please fill in the Title")
+        return;
+      } else if(book.amount == "")
+      {
+        alert("Please fill in the amount")
+        return;
+      }
       
       writeUserData(book.id, book.date, book.title, book.inout, book.amount);
       books.push(book);
       document.forms[0].reset();
-
+      location.reload();
     }
 
     function writeUserData(id, date, title, inout, money) {
